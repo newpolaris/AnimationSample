@@ -309,10 +309,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine,
         QueryPerformanceCounter(&timerStart);
 
         DWORD thisTick = GetTickCount();
-        float dt = float(thisTick - lastTick) * 0.001f;
+        float deltaTime = float(thisTick - lastTick) * 0.001f;
         lastTick = thisTick;
+        accumulator.deltaTime += deltaTime;
         if (gApplication != 0) {
-            gApplication->Update(dt);
+            gApplication->Update(deltaTime);
         }
         QueryPerformanceCounter(&timerStop);
         timerDiff = timerStop.QuadPart - timerStart.QuadPart;
@@ -348,7 +349,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine,
             float aspect = (float)clientWidth / (float)clientHeight;
 
             glQueryCounter(gGpuApplicationStart, GL_TIMESTAMP);
-            gApplication->Render(aspect);
+            if (gApplication != 0) {
+                gApplication->Render(aspect);
+            }
             glQueryCounter(gGpuApplicationStop, GL_TIMESTAMP);
         }
         QueryPerformanceCounter(&timerStop);
@@ -390,6 +393,44 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine,
                 gNkContext->style.text.color = defaultColor;
             }
             nk_end(gNkContext);
+
+            if (nk_begin(gNkContext, "GPU Timers", nk_rect(imguiXPosition, 125.0f, 200.0f, 45.0f), NK_WINDOW_BORDER | NK_WINDOW_NO_SCROLLBAR)) {
+                nk_layout_row_static(gNkContext, 15, 200, 1);
+
+                sprintf(printBuffer, "Game GPU: %0.5f ms\0", display.appGPU);
+                nk_label(gNkContext, printBuffer, NK_TEXT_LEFT);
+
+                sprintf(printBuffer, "IMGUI GPU: %0.5f ms\0", display.imguiGPU);
+                nk_label(gNkContext, printBuffer, NK_TEXT_LEFT);
+            }
+            nk_end(gNkContext);
+
+            if (nk_begin(gNkContext, "CPU Timers", nk_rect(imguiXPosition, 175.0f, 200.0f, 120.0f), NK_WINDOW_BORDER | NK_WINDOW_NO_SCROLLBAR)) {
+                nk_layout_row_static(gNkContext, 15, 200, 1);
+
+                sprintf(printBuffer, "Win32 Events: %0.5f ms\0", display.win32Events);
+                nk_label(gNkContext, printBuffer, NK_TEXT_LEFT);
+
+                sprintf(printBuffer, "Game Update: %0.5f ms\0", display.frameUpdate);
+                nk_label(gNkContext, printBuffer, NK_TEXT_LEFT);
+
+                sprintf(printBuffer, "Game Render: %0.5f ms\0", display.frameRender);
+                nk_label(gNkContext, printBuffer, NK_TEXT_LEFT);
+
+                sprintf(printBuffer, "IMGUI logic: %0.5f ms\0", display.imguiLogic);
+                nk_label(gNkContext, printBuffer, NK_TEXT_LEFT);
+
+                sprintf(printBuffer, "IMGUI render: %0.5f ms\0", display.imguiRender);
+                nk_label(gNkContext, printBuffer, NK_TEXT_LEFT);
+
+                sprintf(printBuffer, "Swap Buffers: %0.5f ms\0", display.swapBuffer);
+                nk_label(gNkContext, printBuffer, NK_TEXT_LEFT);
+            }
+            nk_end(gNkContext);
+
+            if (gApplication != 0) {
+                gApplication->ImGui(gNkContext);
+            }
         }
         QueryPerformanceCounter(&timerStop);
         timerDiff = timerStop.QuadPart - timerStart.QuadPart;

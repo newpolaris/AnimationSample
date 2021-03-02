@@ -27,13 +27,11 @@ void DrawInstance(unsigned int vertexCount,
             0, vertexCount, numInstances);
 }
 
-#if 0
 void Draw(IndexBuffer& inIndexBuffer, DrawMode mode) {
 }
 
 void DrawInstanced(IndexBuffer& inIndexBuffer,
-        DrawMode mode, unsigned int instanceCount) {
+    DrawMode mode, unsigned int instanceCount) {
     unsigned int handle = inIndexBuffer.GetHandle();
     unsigned int numIndices = inIndexBuffer.Count();
 }
-#endif
