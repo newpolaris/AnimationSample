@@ -37,7 +37,7 @@ unsigned int Shader::CompileVertexShader(
     int success = 0;
     glGetShaderiv(v, GL_COMPILE_STATUS, &success);
     if (!success) {
-        constexpr size_t kLen = 512;
+        static const size_t kLen = 512;
         char infoLog[kLen];
         glGetShaderInfoLog(v, kLen, NULL, infoLog);
         std::cout << "Vertex compilelation failed.\n";
@@ -57,7 +57,7 @@ unsigned int Shader::CompileFragmentShader(
     int success = 0;
     glGetShaderiv(f, GL_COMPILE_STATUS, &success);
     if (!success) {
-        constexpr size_t kLen = 512;
+        static const size_t kLen = 512;
         char infoLog[kLen];
         glGetShaderInfoLog(f, kLen, NULL, infoLog);
         std::cout << "Vertex compilelation failed.\n";
@@ -90,7 +90,7 @@ bool Shader::LinkShaders(unsigned int vertex,
 }
 
 void Shader::PopulateAttributes() {
-    constexpr size_t kLen = 128;
+    static const size_t kLen = 128;
     int count = -1;
     int length;
     char name[kLen];
@@ -111,6 +111,33 @@ void Shader::PopulateAttributes() {
 }
 
 void Shader::PopulateUniforms() {
+    static const size_t kName = 128;
+    static const size_t kTempName = 256;
     int count = -1;
     int length;
+    char name[kName];
+    int size;
+    GLenum type;
+    char testName[kTempName];
+    glUseProgram(mHandle);
+    glGetProgramiv(mHandle, GL_ACTIVE_UNIFORMS, &count);
+    for (size_t i = 0; i < count; i++) {
+        memset(name, 0, sizeof(name));
+        glGetActiveUniform(mHandle, (GLuint)i, kName,
+                &length, &size, &type, name);
+        int uniform = glGetUniformLocation(mHandle, name);
+        if (uniform >= 0) { // Is Uniform valid?
+        }
+    }
+}
+
+void Shader::Load(const std::string& vertex,
+                  const std::string& framgnet) {
+    std::ifstream vf(vertex.c_str());
+    bool vertFile = vf.good();
+    vf.close();
+    std::ifstream ff(vertex.c_str());
+    bool fragFile = ff.good();
+    ff.close();
+    std::string v_source = vertex;
 }
