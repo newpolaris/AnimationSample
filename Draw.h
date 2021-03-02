@@ -1,6 +1,8 @@
 #ifndef __DRAW_H__
 #define __DRAW_H__
 
+#include "IndexBuffer.h"
+
 enum class DrawMode {
     Points,
     LineStrip,

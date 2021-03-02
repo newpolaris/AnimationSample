@@ -2,20 +2,16 @@
 
 #include "glad.h"
 
-#include "vec2.h"
-#include "vec3.h"
-#include "vec4.h"
+#include "Vec2.h"
+#include "Vec3.h"
+#include "Vec4.h"
 
 template Attribute<int>;
 template Attribute<float>;
-
-#if 0
 template Attribute<vec2>;
 template Attribute<vec3>;
 template Attribute<vec4>;
 template Attribute<ivec4>;
-#endif
-
 
 template<typename T>
 Attribute<T>::Attribute() {

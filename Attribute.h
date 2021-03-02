@@ -9,8 +9,8 @@ protected:
     unsigned int mHandle;
     unsigned int mCount;
 private:
-    Attribute(const Attribute& other);
-    Attribute& operator=(const Attribute& other);
+    Attribute(const Attribute& other) = delete;
+    Attribute& operator=(const Attribute& other) = delete;
 
     void SetAttribPointer(unsigned int slot);
 
@@ -24,6 +24,6 @@ public:
     void UnBindFrom(unsigned int slot);
     unsigned int Count();
     unsigned int GetHandle();
-}
+};
 
 #endif // __ATTRIBUTE_H__

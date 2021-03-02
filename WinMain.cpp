@@ -1,3 +1,6 @@
+#pragma warning(disable : 28251)
+#pragma warning(disable : 28159)
+
 #define _CRT_SECURE_NO_WARNINGS
 #define WIN32_LEAN_AND_MEAN
 #define WIN32_EXTRA_LEAN
@@ -6,7 +9,37 @@
 #undef APIENTRY
 #include <Windows.h>
 #include <iostream>
+#include <ShellScalingAPI.h>
 #include "Application.h"
+
+// Nuklear
+#define NK_INCLUDE_FIXED_TYPES
+#define NK_INCLUDE_STANDARD_IO
+#define NK_INCLUDE_STANDARD_VARARGS
+#define NK_INCLUDE_DEFAULT_ALLOCATOR
+#define NK_INCLUDE_VERTEX_BUFFER_OUTPUT
+#define NK_INCLUDE_FONT_BAKING
+#define NK_INCLUDE_DEFAULT_FONT
+#include "nuklear.h"
+extern "C" {
+	NK_API nk_context* nk_win32_init();
+	NK_API int nk_win32_handle_event(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam, float scaleFactor);
+	NK_API void nk_win32_render(int width, int height, int display_width, int display_height);
+	NK_API void nk_blank_render(int width, int height, int display_width, int display_height);
+	NK_API void nk_win32_shutdown(void);
+	NK_API void nk_demo();
+}
+
+#define WGL_CONTEXT_MAJOR_VERSION_ARB     0x2091
+#define WGL_CONTEXT_MINOR_VERSION_ARB     0x2092
+#define WGL_CONTEXT_FLAGS_ARB             0x2094
+#define WGL_CONTEXT_CORE_PROFILE_BIT_ARB  0x00000001
+#define WGL_CONTEXT_PROFILE_MASK_ARB      0x9126
+typedef HGLRC(WINAPI* PFNWGLCREATECONTEXTATTRIBSARBPROC) (HDC, HGLRC, const int*);
+
+typedef const char* (WINAPI* PFNWGLGETEXTENSIONSSTRINGEXTPROC) (void);
+typedef BOOL(WINAPI* PFNWGLSWAPINTERVALEXTPROC) (int);
+typedef int (WINAPI* PFNWGLGETSWAPINTERVALEXTPROC) (void);
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine, int iCmdShow);
 LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam);
@@ -30,21 +63,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam);
 // App antry & setup
 #pragma comment(lib, "opengl32.lib")
 
-#define WGL_CONTEXT_MAJOR_VERSION_ARB     0x2091
-#define WGL_CONTEXT_MINOR_VERSION_ARB     0x2092
-#define WGL_CONTEXT_FLAGS_ARB             0x2094
-#define WGL_CONTEXT_CORE_PROFILE_BIT_ARB  0x00000001
-#define WGL_CONTEXT_PROFILE_MASK_ARB      0x9126
-typedef HGLRC(WINAPI* PFNWGLCREATECONTEXTATTRIBSARBPROC) (HDC, HGLRC, const int*);
-
-typedef const char* (WINAPI* PFNWGLGETEXTENSIONSSTRINGEXTPROC) (void);
-typedef BOOL(WINAPI* PFNWGLSWAPINTERVALEXTPROC) (int);
-typedef int (WINAPI* PFNWGLGETSWAPINTERVALEXTPROC) (void);
-
 Application* gApplication = 0;
 GLuint gVertexArrayObject = 0;
 
+float gScaleFactor = 1.0f;
+float gInvScaleFactor = 1.0f;
+
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine, int iCmdShow) {
+	HRESULT hr = SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE);
+
     gApplication = new Application();
 
     WNDCLASSEX wndclass;
@@ -64,8 +91,17 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine,
 
     int screenWidth = GetSystemMetrics(SM_CXSCREEN);
     int screenHeight = GetSystemMetrics(SM_CYSCREEN);
+
     int clientWidth = 800;
     int clientHeight = 600;
+
+    UINT DPI = GetDpiForSystem();
+    gScaleFactor = (float)DPI / 96.0f;
+    gInvScaleFactor = 1.0f / gScaleFactor;
+
+    clientWidth = (int)((float)clientWidth * gScaleFactor);
+    clientHeight = (int)((float)clientHeight * gScaleFactor);
+
     RECT windowRect;
     SetRect(&windowRect, 
             (screenWidth / 2) - (clientWidth / 2), 
@@ -214,7 +250,28 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam) {
             DestroyWindow(hwnd);
         }
         else {
+            std::cout << "Already shut down!\n";
         }
         break;
+    case WM_DESTROY:
+        if (gVertexArrayObject != 0) {
+            HDC hdc = GetDC(hwnd);
+            HGLRC hglrc = wglGetCurrentContext();
+            glBindVertexArray(0);
+            glDeleteVertexArrays(1, &gVertexArrayObject);
+            gVertexArrayObject = 0;
+            wglMakeCurrent(NULL, NULL);
+            wglDeleteContext(hglrc);
+            ReleaseDC(hwnd, hdc);
+            PostQuitMessage(0);
+        }
+        else {
+            std::cout << "Multiple destroy message\n";
+        }
+        break;
+    case WM_PAINT:
+    case WM_ERASEBKGND:
+        return 0;
     }
+    return DefWindowProc(hwnd, iMsg, wParam, lParam);
 }
