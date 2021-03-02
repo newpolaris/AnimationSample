@@ -361,6 +361,33 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine,
             float imguiXPosition = ((float)clientWidth * gInvScaleFactor) - 205.0f;
             if (nk_begin(gNkContext, "Display Stats", nk_rect(imguiXPosition, 5.0f, 200.0f, 65.0f), NK_WINDOW_BORDER | NK_WINDOW_NO_SCROLLBAR)) {
                 nk_layout_row_static(gNkContext, 15, 200, 1);
+
+                sprintf(printBuffer, "Display frequency: %d\0", displayFrequency);
+                nk_label(gNkContext, printBuffer, NK_TEXT_LEFT);
+
+                if (vsync != 0) {
+                    nk_label(gNkContext, "VSync: on", NK_TEXT_LEFT);
+                }
+                else {
+                    nk_label(gNkContext, "VSync: off", NK_TEXT_LEFT);
+                }
+                sprintf(printBuffer, "Frame budget: %0.2f ms\0", frameBudget);
+                nk_label(gNkContext, printBuffer, NK_TEXT_LEFT);
+            }
+            nk_end(gNkContext);
+
+            if (nk_begin(gNkContext, "High Level Timers", nk_rect(imguiXPosition, 75.0f, 200.0f, 45.0f),
+                NK_WINDOW_BORDER | NK_WINDOW_NO_SCROLLBAR)) {
+                nk_layout_row_static(gNkContext, 15, 200, 1);
+                gNkContext->style.text.color = slowFrame ? red : defaultColor;
+
+                sprintf(printBuffer, "Frame Time: %0.5f ms\0", display.frameTime);
+                nk_label(gNkContext, printBuffer, NK_TEXT_LEFT);
+
+                sprintf(printBuffer, "Delta Time: %0.5f ms\0", display.deltaTime);
+                nk_label(gNkContext, printBuffer, NK_TEXT_LEFT);
+
+                gNkContext->style.text.color = defaultColor;
             }
             nk_end(gNkContext);
         }
@@ -396,6 +423,35 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine,
                 glFinish();
             }
         }
+        QueryPerformanceCounter(&timerStop);
+        timerDiff = timerStop.QuadPart - timerStart.QuadPart;
+        accumulator.swapBuffer += (double)timerDiff * 1000.0 / (double)timerFrequency.QuadPart;
+
+        QueryPerformanceCounter(&frameStop);
+        timerDiff = frameStop.QuadPart - frameStart.QuadPart;
+        double frameTime = (double)timerDiff * 1000.0 / (double)timerFrequency.QuadPart;
+        accumulator.frameTime += frameTime;
+
+        // Profiling house keeping
+        firstRenderSample = false;
+        if (++frameCounter >= 60) {
+            frameCounter = 0;
+
+            display.win32Events = accumulator.win32Events / 60.0;
+            display.frameUpdate = accumulator.frameUpdate / 60.0;
+            display.frameRender = accumulator.frameRender / 60.0;
+            display.imguiLogic = accumulator.imguiLogic / 60.0;
+            display.imguiRender = accumulator.imguiRender / 60.0;
+            display.swapBuffer = accumulator.swapBuffer / 60.0;
+            display.frameTime = accumulator.frameTime / 60.0;
+            display.deltaTime = accumulator.deltaTime / 60.0f;
+            display.appGPU = accumulator.appGPU / 60.0;
+            display.imguiGPU = accumulator.imguiGPU / 60.0;
+
+            memset(&accumulator, 0, sizeof(FrameTimer));
+            slowFrame = display.frameTime >= frameBudget;
+        }
+
     } // End of game loop
 
     if (gApplication != 0) {
