@@ -127,12 +127,33 @@ void Shader::PopulateUniforms() {
                 &length, &size, &type, name);
         int uniform = glGetUniformLocation(mHandle, name);
         if (uniform >= 0) { // Is Uniform valid?
+            std::string uniformName = name;
+            // if name contains [, uniform is array
+            std::size_t found = uniformName.find('[');
+            if (found != std::string::npos) {
+                uniformName.erase(uniformName.begin() + found,
+                        uniformName.end());
+                unsigned int uniformIndex = 0;
+                while (true) {
+                    memset(testName, 0, sizeof(testName));
+                    sprintf(testName, "%s[%d]", uniformName.c_str(),
+                            uniformIndex++);
+                    int uniformLocation = glGetUniformLocation(
+                            mHandle, testName);
+                    if (uniformLocation < 0) {
+                        break;
+                    }
+                    mUniforms[testName] = uniformLocation;
+                }
+            }
+            mUniforms[uniformName] = uniform;
         }
     }
+    glUseProgram(0);
 }
 
 void Shader::Load(const std::string& vertex,
-                  const std::string& framgnet) {
+                  const std::string& fragment) {
     std::ifstream vf(vertex.c_str());
     bool vertFile = vf.good();
     vf.close();
@@ -140,4 +161,33 @@ void Shader::Load(const std::string& vertex,
     bool fragFile = ff.good();
     ff.close();
     std::string v_source = vertex;
+    if (vertFile) {
+        v_source = ReadFile(vertex);
+    }
+    std::string f_source = fragment;
+    if (fragFile) {
+        f_source = ReadFile(fragment);
+    }
+    unsigned int vert = CompileVertexShader(v_source);
+    unsigned int frag = CompileFragmentShader(f_source);
+    if (LinkShaders(vert, frag)) {
+        PopulateAttributes();
+        PopulateUniforms();
+    }
+}
+
+void Shader::Bind() {
+    glUseProgram(mHandle);
+}
+
+void Shader::UnBind() {
+    glUseProgram(0);
+}
+
+unsigned int Shader::GetHandle() {
+    return mHandle;
+}
+
+unsigned int Shader::GetAttribute(const std::string& name) {
+    return 0;
 }
