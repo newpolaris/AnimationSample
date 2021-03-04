@@ -144,10 +144,17 @@
     <ClInclude Include="Draw.h" />
     <ClInclude Include="glad.h" />
     <ClInclude Include="IndexBuffer.h" />
+    <ClInclude Include="Interpolation.h" />
     <ClInclude Include="khrplatform.h" />
+    <ClInclude Include="Mat4.h" />
     <ClInclude Include="nuklear.h" />
     <ClInclude Include="Shader.h" />
+    <ClInclude Include="stb_image.h" />
+    <ClInclude Include="Texture.h" />
+    <ClInclude Include="Uniform.h" />
+    <ClInclude Include="Vec2.h" />
     <ClInclude Include="Vec3.h" />
+    <ClInclude Include="Vec4.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Application.cpp" />
@@ -155,10 +162,21 @@
     <ClCompile Include="Draw.cpp" />
     <ClCompile Include="glad.c" />
     <ClCompile Include="IndexBuffer.cpp" />
+    <ClCompile Include="Mat4.cpp" />
     <ClCompile Include="nuklear.c" />
     <ClCompile Include="Shader.cpp" />
-    <ClCompile Include="Vec3.cpp" />
+    <ClCompile Include="stb_image.cpp" />
+    <ClCompile Include="Texture.cpp" />
+    <ClCompile Include="Uniform.cpp" />
     <ClCompile Include="WinMain.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="lit.frag" />
+    <None Include="static.vert" />
+    <None Include="test.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

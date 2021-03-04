@@ -98,3 +98,5 @@ inline constexpr mat4 operator+(const mat4& a, const mat4& b)
 }
 
 } // namespace gszauer
+
+using mat4 = gszauer::mat4;
