@@ -188,6 +188,22 @@ unsigned int Shader::GetHandle() {
     return mHandle;
 }
 
-unsigned int Shader::GetAttribute(const std::string& name) {
+unsigned int Shader::GetAttribute(
+    const std::string& name) {
+    auto it = mAttributes.find(name);
+    if (it == mAttributes.end()) {
+        std::cout << "Bad attrib index: " << name << "\n";
+        return 0;
+    }
+    return it->second;
     return 0;
+}
+
+unsigned int Shader::GetUniform(const std::string& name) {
+    auto it = mUniforms.find(name);
+    if (it == mUniforms.end()) {
+        std::cout << "Bad uniform index: " << name << "\n";
+        return 0;
+    }
+    return it->second;
 }

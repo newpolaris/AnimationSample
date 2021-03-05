@@ -44,6 +44,24 @@ typedef int (WINAPI* PFNWGLGETSWAPINTERVALEXTPROC) (void);
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine, int iCmdShow);
 LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam);
 
+#include "Quat.h"
+#include "Transform.h"
+#include "Shader.h"
+
+char vertex[] = R"__(
+#version 330 core
+
+uniform mat4 u_vertex;
+uniform vec3 light[128];
+
+in vec3 a_position;
+out vec4 o_position;
+
+void main() {
+    o_position = u_vertex * vec4(light[5], 1.0);
+}
+)__";
+
 #if _DEBUG
 #include <crtdbg.h>
 #pragma comment(linker, "/subsystem:console")
@@ -181,6 +199,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine,
     else {
         std::cout << "OpenGL Version " << GLVersion.major << "." << GLVersion.minor << "\n";
     }
+
+    Shader Shader;
+    Shader.Load(vertex, vertex);
 
     // Enable vsync
     PFNWGLGETEXTENSIONSSTRINGEXTPROC _wglGetExtensionsStringEXT =

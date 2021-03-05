@@ -22,6 +22,8 @@ struct TVec3
         };
     };
     constexpr TVec3() : v{ T(0.0), T(0.0), T(0.0) } {}
+    template <typename A>
+    constexpr TVec3(A a) : v{ T(a), T(a), T(a) } {}
     TVec3(T x, T y, T z) :
         x(x), y(y), z(z) {}
     TVec3(T * fv) :
